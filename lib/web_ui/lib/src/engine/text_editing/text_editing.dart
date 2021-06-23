@@ -377,14 +377,16 @@ class AutofillInfo {
   }
 }
 
-/// The current text and selection state of a text field.
+/// The current text, selection state and scroll offset of a text field.
 @visibleForTesting
 class EditingState {
-  EditingState({this.text, int? baseOffset, int? extentOffset}) :
+  EditingState({this.text, int? baseOffset, int? extentOffset, double? scrollOffset}) :
     // Don't allow negative numbers. Pick the smallest selection index for base.
     baseOffset = math.max(0, math.min(baseOffset ?? 0, extentOffset ?? 0)),
     // Don't allow negative numbers. Pick the greatest selection index for extent.
-    extentOffset = math.max(0, math.max(baseOffset ?? 0, extentOffset ?? 0));
+    extentOffset = math.max(0, math.max(baseOffset ?? 0, extentOffset ?? 0)),
+    // Don't allow negative numbers.
+    scrollOffset = math.max(0, scrollOffset ?? 0);
 
   /// Creates an [EditingState] instance using values from an editing state Map
   /// coming from Flutter.
@@ -395,6 +397,7 @@ class EditingState {
   ///   "text": "The text here",
   ///   "selectionBase": 0,
   ///   "selectionExtent": 0,
+  ///   "scrollOffset": 0,
   ///   "selectionAffinity": "TextAffinity.upstream",
   ///   "selectionIsDirectional": false,
   ///   "composingBase": -1,
@@ -409,12 +412,14 @@ class EditingState {
       Map<String, dynamic> flutterEditingState) {
     final int selectionBase = flutterEditingState['selectionBase'];
     final int selectionExtent = flutterEditingState['selectionExtent'];
+    final double scrollOffset = flutterEditingState['scrollOffset'];
     final String? text = flutterEditingState['text'];
 
     return EditingState(
       text: text,
       baseOffset: selectionBase,
       extentOffset: selectionExtent,
+      scrollOffset: scrollOffset,
     );
   }
 
@@ -431,13 +436,15 @@ class EditingState {
       return EditingState(
           text: element.value,
           baseOffset: element.selectionStart,
-          extentOffset: element.selectionEnd);
+          extentOffset: element.selectionEnd,
+          scrollOffset: element.scrollLeft.toDouble());
     } else if (domElement is html.TextAreaElement) {
       html.TextAreaElement element = domElement;
       return EditingState(
           text: element.value,
           baseOffset: element.selectionStart,
-          extentOffset: element.selectionEnd);
+          extentOffset: element.selectionEnd,
+          scrollOffset: element.scrollTop.toDouble());
     } else {
       throw UnsupportedError('Initialized with unsupported input type');
     }
@@ -450,6 +457,7 @@ class EditingState {
         'text': text,
         'selectionBase': baseOffset,
         'selectionExtent': extentOffset,
+        'scrollOffset': scrollOffset,
       };
 
   /// The current text being edited.
@@ -461,11 +469,14 @@ class EditingState {
   /// The offset at which the text selection terminates.
   final int? extentOffset;
 
+  /// The offset at which the text has scrolled.
+  final double? scrollOffset;
+
   /// Whether the current editing state is valid or not.
-  bool get isValid => baseOffset! >= 0 && extentOffset! >= 0;
+  bool get isValid => baseOffset! >= 0 && extentOffset! >= 0 && scrollOffset! >= 0;
 
   @override
-  int get hashCode => ui.hashValues(text, baseOffset, extentOffset);
+  int get hashCode => ui.hashValues(text, baseOffset, extentOffset, scrollOffset);
 
   @override
   bool operator ==(Object other) {
@@ -478,13 +489,14 @@ class EditingState {
     return other is EditingState &&
         other.text == text &&
         other.baseOffset == baseOffset &&
-        other.extentOffset == extentOffset;
+        other.extentOffset == extentOffset &&
+        other.scrollOffset == scrollOffset;
   }
 
   @override
   String toString() {
     return assertionsEnabled
-        ? 'EditingState("$text", base:$baseOffset, extent:$extentOffset)'
+        ? 'EditingState("$text", base:$baseOffset, extent:$extentOffset, scroll:$scrollOffset)'
         : super.toString();
   }
 
@@ -505,10 +517,12 @@ class EditingState {
       html.InputElement element = domElement;
       element.value = text;
       element.setSelectionRange(baseOffset!, extentOffset!);
+      element.scrollLeft = scrollOffset!.round();
     } else if (domElement is html.TextAreaElement) {
       html.TextAreaElement element = domElement;
       element.value = text;
       element.setSelectionRange(baseOffset!, extentOffset!);
+      element.scrollTop = scrollOffset!.round();
     } else {
       throw UnsupportedError('Unsupported DOM element type: <${domElement?.tagName}> (${domElement.runtimeType})');
     }
@@ -989,14 +1003,14 @@ abstract class DefaultTextEditingStrategy implements TextEditingStrategy {
   ///
   /// Changes could be:
   /// - Text changes, or
-  /// - Selection changes.
+  /// - Selection changes, or
+  /// - Scroll changes
   void enable(
     InputConfiguration inputConfig, {
     required _OnChangeCallback onChange,
     required _OnActionCallback onAction,
   }) {
     assert(!isEnabled);
-
     initializeTextEditing(inputConfig, onChange: onChange, onAction: onAction);
 
     addEventHandlers();

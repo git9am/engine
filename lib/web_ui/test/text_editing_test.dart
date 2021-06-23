@@ -214,9 +214,9 @@ void testMain() {
         onAction: trackInputAction,
       );
       editingStrategy!.setEditingState(
-          EditingState(text: 'foo bar baz', baseOffset: 2, extentOffset: 7));
+          EditingState(text: 'foo bar baz', baseOffset: 2, extentOffset: 7, scrollOffset: 0));
 
-      checkInputEditingState(editingStrategy!.domElement!, 'foo bar baz', 2, 7);
+      checkInputEditingState(editingStrategy!.domElement!, 'foo bar baz', 2, 7, 0);
 
       // There should be no input action.
       expect(lastInputAction, isNull);
@@ -250,8 +250,8 @@ void testMain() {
 
       // Can set textarea state correctly (and preserves new lines).
       editingStrategy!.setEditingState(
-          EditingState(text: 'bar\nbaz', baseOffset: 2, extentOffset: 7));
-      checkTextAreaEditingState(textarea, 'bar\nbaz', 2, 7);
+          EditingState(text: 'bar\nbaz', baseOffset: 2, extentOffset: 7, scrollOffset: 0));
+      checkTextAreaEditingState(textarea, 'bar\nbaz', 2, 7, 0);
 
       editingStrategy!.disable();
       // The textarea should be cleaned up.
@@ -455,7 +455,7 @@ void testMain() {
       const MethodCall show = MethodCall('TextInput.show');
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
-      checkInputEditingState(textEditing!.strategy.domElement, '', 0, 0);
+      checkInputEditingState(textEditing!.strategy.domElement, '', 0, 0, 0);
 
       const MethodCall setEditingState =
           MethodCall('TextInput.setEditingState', <String, dynamic>{
@@ -466,7 +466,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(setEditingState));
 
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       const MethodCall hide = MethodCall('TextInput.hide');
       sendFrameworkMessage(codec.encodeMethodCall(hide));
@@ -498,7 +498,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       const MethodCall clearClient = MethodCall('TextInput.clearClient');
       sendFrameworkMessage(codec.encodeMethodCall(clearClient));
@@ -571,7 +571,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
       expect(textEditing!.isEditing, isTrue);
 
       // DOM element is blurred.
@@ -620,7 +620,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       const MethodCall finishAutofillContext =
           MethodCall('TextInput.finishAutofillContext', false);
@@ -832,7 +832,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       final MethodCall setClient2 = MethodCall(
           'TextInput.setClient', <dynamic>[567, flutterSinglelineConfig]);
@@ -874,7 +874,7 @@ void testMain() {
 
       // The second [setEditingState] should override the first one.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'xyz', 0, 2);
+          textEditing!.strategy.domElement, 'xyz', 0, 2, 0);
 
       const MethodCall clearClient = MethodCall('TextInput.clearClient');
       sendFrameworkMessage(codec.encodeMethodCall(clearClient));
@@ -911,7 +911,7 @@ void testMain() {
 
       // The second [setEditingState] should override the first one.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       final FormElement formElement = defaultTextEditingRoot.querySelector('form') as FormElement;
       // The form has one input element and one submit button.
@@ -959,6 +959,7 @@ void testMain() {
         expect(defaultTextEditingRoot.activeElement, inputElement);
         expect(inputElement.selectionStart, 2);
         expect(inputElement.selectionEnd, 3);
+        expect(inputElement.scrollLeft, 0);
       }
 
       // The transform is changed. For example after a validation error, red
@@ -974,7 +975,7 @@ void testMain() {
 
       // Check the cursor location is the same.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       const MethodCall clearClient = MethodCall('TextInput.clearClient');
       sendFrameworkMessage(codec.encodeMethodCall(clearClient));
@@ -1021,7 +1022,7 @@ void testMain() {
 
       // The second [setEditingState] should override the first one.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       final FormElement formElement = defaultTextEditingRoot.querySelector('form') as FormElement;
       // The form has 4 input elements and one submit button.
@@ -1140,7 +1141,7 @@ void testMain() {
 
       final Element domElement = textEditing!.strategy.domElement!;
 
-      checkInputEditingState(domElement, 'abcd', 2, 3);
+      checkInputEditingState(domElement, 'abcd', 2, 3, 0);
 
       // Check if the location and styling is correct.
       expect(
@@ -1196,7 +1197,7 @@ void testMain() {
 
       final HtmlElement domElement = textEditing!.strategy.domElement!;
 
-      checkInputEditingState(domElement, 'abcd', 2, 3);
+      checkInputEditingState(domElement, 'abcd', 2, 3, 0);
 
       // Check if the position is correct.
       expect(
@@ -1259,7 +1260,7 @@ void testMain() {
 
       final HtmlElement domElement = textEditing!.strategy.domElement!;
 
-      checkInputEditingState(domElement, 'abcd', 2, 3);
+      checkInputEditingState(domElement, 'abcd', 2, 3, 0);
 
       // Check if the location and styling is correct.
       expect(
@@ -1318,7 +1319,7 @@ void testMain() {
 
       // Check if the selection range is correct.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'xyz', 1, 2);
+          textEditing!.strategy.domElement, 'xyz', 1, 2, 0);
 
       const MethodCall setEditingState2 =
           MethodCall('TextInput.setEditingState', <String, dynamic>{
@@ -1330,7 +1331,7 @@ void testMain() {
 
       // The negative offset values are applied to the dom element as 0.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'xyz', 0, 0);
+          textEditing!.strategy.domElement, 'xyz', 0, 0, 0);
 
       hideKeyboard();
     });
@@ -1366,7 +1367,8 @@ void testMain() {
           <String, dynamic>{
             'text': 'something',
             'selectionBase': 9,
-            'selectionExtent': 9
+            'selectionExtent': 9,
+            'scrollOffset': 0,
           }
         ],
       );
@@ -1390,7 +1392,8 @@ void testMain() {
           <String, dynamic>{
             'text': 'something',
             'selectionBase': 2,
-            'selectionExtent': 5
+            'selectionExtent': 5,
+            'scrollOffset': 0,
           }
         ],
       );
@@ -1433,7 +1436,7 @@ void testMain() {
 
       // The second [setEditingState] should override the first one.
       checkInputEditingState(
-          textEditing!.strategy.domElement, 'abcd', 2, 3);
+          textEditing!.strategy.domElement, 'abcd', 2, 3, 0);
 
       final FormElement formElement = defaultTextEditingRoot.querySelector('form') as FormElement;
       // The form has 4 input elements and one submit button.
@@ -1463,7 +1466,8 @@ void testMain() {
             hintForFirstElement: <String, dynamic>{
               'text': 'something',
               'selectionBase': 9,
-              'selectionExtent': 9
+              'selectionExtent': 9,
+              'scrollOffset': 0,
             }
           },
         ],
@@ -1485,7 +1489,7 @@ void testMain() {
       sendFrameworkMessage(codec.encodeMethodCall(show));
 
       final TextAreaElement textarea = textEditing!.strategy.domElement as TextAreaElement;
-      checkTextAreaEditingState(textarea, '', 0, 0);
+      checkTextAreaEditingState(textarea, '', 0, 0, 0);
 
       // Can set editing state and preserve new lines.
       const MethodCall setEditingState =
@@ -1495,7 +1499,7 @@ void testMain() {
         'selectionExtent': 3,
       });
       sendFrameworkMessage(codec.encodeMethodCall(setEditingState));
-      checkTextAreaEditingState(textarea, 'foo\nbar', 2, 3);
+      checkTextAreaEditingState(textarea, 'foo\nbar', 2, 3, 0);
 
       textarea.value = 'something\nelse';
 
@@ -1522,6 +1526,7 @@ void testMain() {
             'text': 'something\nelse',
             'selectionBase': 14,
             'selectionExtent': 14,
+            'scrollOffset': 0,
           }
         ],
       );
@@ -1536,6 +1541,7 @@ void testMain() {
             'text': 'something\nelse',
             'selectionBase': 2,
             'selectionExtent': 5,
+            'scrollOffset': 0,
           }
         ],
       );
@@ -1991,6 +1997,162 @@ void testMain() {
       expect(editingState1 == editingState2, isTrue);
       expect(editingState1 != editingState3, isTrue);
     });
+
+    test('Scroll offset from input element is 0 (scrollWidth == clientWidth)', () {
+      final InputElement input = defaultTextEditingRoot.querySelector('input') as InputElement;
+      input.value = '';
+
+      expect(input.scrollWidth == input.clientWidth, isTrue);
+      input.scrollLeft = 3;
+      _editingState = EditingState.fromDomElement(input);
+      expect(input.scrollLeft, 0);
+      expect(_editingState.scrollOffset, 0);
+    });
+
+    test('Scroll offset from input element is set (scrollWidth > clientWidth)', () {
+      final InputElement input = defaultTextEditingRoot.querySelector('input') as InputElement;
+      input.value = '';
+      while (input.scrollWidth <= input.clientWidth + 3) {
+        input.value = input.value! + 'LongLongLong';
+      }
+      expect(input.scrollWidth > input.clientWidth, isTrue);
+      input.scrollLeft = 3;
+      _editingState = EditingState.fromDomElement(input);
+      expect(_editingState.scrollOffset, 3);
+    });
+
+    test('Scroll offset from input element is between 0 and (scrollWidth - clientWidth) inclusively', () {
+      final InputElement input = defaultTextEditingRoot.querySelector('input') as InputElement;
+      input.value = '';
+      while (input.scrollWidth <= input.clientWidth) {
+        input.value = input.value! + 'LongLongLong';
+      }
+      expect(input.scrollWidth > input.clientWidth, isTrue);
+
+      // Negative scroll offsets will result in 0
+      input.scrollLeft = -1;
+      _editingState = EditingState.fromDomElement(input);
+      expect(_editingState.scrollOffset, 0);
+
+      // Scroll offsets greater than (scrollWidth - clientWidth) will be clamped
+      input.scrollLeft = input.scrollWidth - input.clientWidth + 1;
+      _editingState = EditingState.fromDomElement(input);
+      expect(_editingState.scrollOffset, input.scrollWidth - input.clientWidth);
+    });
+
+    test('Configure input element scroll offset from editing state', () {
+      final InputElement input = defaultTextEditingRoot.querySelector('input') as InputElement;
+      // Make a long enough string that exceeds the input's client width
+      input.value = '';
+      while (input.scrollWidth <= input.clientWidth + 5) {
+        input.value = input.value! + 'LongLongLong';
+      }
+      expect(input.scrollWidth > input.clientWidth, isTrue);
+      final String longString = input.value!;
+      input.value = '';
+
+      _editingState = EditingState(text: longString, scrollOffset: 2);
+      _editingState.applyToDomElement(input);
+      expect(input.value, longString);
+      expect(input.scrollLeft, 2);
+    });
+
+    test('Scroll offset from text area element is 0 (scrollHeight == clientHeight)', () {
+      cleanTextEditingStrategy();
+      editingStrategy!.enable(
+        multilineConfig,
+        onChange: trackEditingState,
+        onAction: trackInputAction,
+      );
+
+      final TextAreaElement textArea =
+          defaultTextEditingRoot.querySelector('textarea') as TextAreaElement;
+      textArea.value = '';
+
+      expect(textArea.scrollHeight, textArea.clientHeight);
+      textArea.scrollTop = 3;
+      _editingState = EditingState.fromDomElement(textArea);
+      expect(textArea.scrollTop, 0);
+      expect(_editingState.scrollOffset, 0);
+    });
+
+    test('Scroll offset from text element is set (scrollHeight > clientHeight)', () {
+      cleanTextEditingStrategy();
+      editingStrategy!.enable(
+        multilineConfig,
+        onChange: trackEditingState,
+        onAction: trackInputAction,
+      );
+
+      final TextAreaElement textArea =
+          defaultTextEditingRoot.querySelector('textarea') as TextAreaElement;
+      _editingState = EditingState(text: 'LongLongLong');
+      _editingState.applyToDomElement(textArea);
+      while (textArea.scrollHeight <= textArea.clientHeight + 3) {
+        textArea.value = textArea.value! + '\nLongLongLong';
+      }
+
+      expect(textArea.scrollHeight > textArea.clientHeight, isTrue);
+      textArea.scrollTop = 3;
+      _editingState = EditingState.fromDomElement(textArea);
+      expect(_editingState.scrollOffset, 3);
+    });
+
+    test('Scroll offset from text area element is between 0 and (scrollHeight - clientHeight) inclusively', () {
+      cleanTextEditingStrategy();
+      editingStrategy!.enable(
+        multilineConfig,
+        onChange: trackEditingState,
+        onAction: trackInputAction,
+      );
+
+      final TextAreaElement textArea =
+          defaultTextEditingRoot.querySelector('textarea') as TextAreaElement;
+      _editingState = EditingState(text: 'LongLongLong');
+      _editingState.applyToDomElement(textArea);
+      while (textArea.scrollHeight <= textArea.clientHeight) {
+        textArea.value = textArea.value! + '\nLongLongLong';
+      }
+
+      expect(textArea.scrollHeight > textArea.clientHeight, isTrue);
+
+      // Negative scroll offsets will result in 0
+      textArea.scrollTop= -1;
+      _editingState = EditingState.fromDomElement(textArea);
+      expect(_editingState.scrollOffset, 0);
+
+      // Scroll offsets greater than (scrollHeight - clientHeight) will be clamped
+      textArea.scrollTop = textArea.scrollHeight - textArea.clientHeight + 1;
+      _editingState = EditingState.fromDomElement(textArea);
+      expect(_editingState.scrollOffset, textArea.scrollHeight - textArea.clientHeight);
+    });
+
+    test('Configure text area element scroll offset from editing state', () {
+      cleanTextEditingStrategy();
+      editingStrategy!.enable(
+        multilineConfig,
+        onChange: trackEditingState,
+        onAction: trackInputAction,
+      );
+
+      final TextAreaElement textArea =
+          defaultTextEditingRoot.querySelector('textarea') as TextAreaElement;
+
+      // Make a long enough string that exceeds the text area's client height
+      textArea.value = 'LongLongLong';
+      while (textArea.scrollHeight <= textArea.clientHeight + 5) {
+        textArea.value = textArea.value! + '\nLongLongLong';
+      }
+      expect(textArea.scrollHeight > textArea.clientHeight, isTrue);
+      final String longString = textArea.value!;
+      textArea.value = '';
+
+      _editingState = EditingState(text: longString, scrollOffset: 2);
+      _editingState.applyToDomElement(textArea);
+      expect(textArea.value, longString);
+      expect(textArea.scrollTop, 2);
+    });
+
   });
 }
 
@@ -2049,7 +2211,7 @@ void cleanTestFlags() {
 }
 
 void checkInputEditingState(
-    Element? element, String text, int start, int end) {
+    Element? element, String text, int start, int end, int scroll) {
   expect(element, isNotNull);
   expect(element, isA<InputElement>());
   final InputElement input = element as InputElement;
@@ -2057,6 +2219,7 @@ void checkInputEditingState(
   expect(input.value, text);
   expect(input.selectionStart, start);
   expect(input.selectionEnd, end);
+  expect(input.scrollLeft, scroll);
 }
 
 /// In case of an exception backup DOM element(s) can still stay on the DOM.
@@ -2076,11 +2239,13 @@ void checkTextAreaEditingState(
   String text,
   int start,
   int end,
+  int scroll,
 ) {
   expect(defaultTextEditingRoot.activeElement, textarea);
   expect(textarea.value, text);
   expect(textarea.selectionStart, start);
   expect(textarea.selectionEnd, end);
+  expect(textarea.scrollTop, scroll);
 }
 
 /// Creates an [InputConfiguration] for using in the tests.
